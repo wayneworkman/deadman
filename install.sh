@@ -6,7 +6,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 
-cp dead_mans_shutdown.py /dead_mans_shutdown.py
+cp deadman.py /deadman.py
 cp deadman.service /etc/systemd/system/deadman.service
 
 systemctl daemon-reload

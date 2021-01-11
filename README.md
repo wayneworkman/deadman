@@ -13,7 +13,7 @@ If the list of hosts fail to ping at all during 3 consecutive attempts when this
 
 Run `install.sh` as root. This will:
 
-* copy the python script to `/dead_mans_shutdown.py`
+* copy the python script to `/deadman.py`
 * copy the systemd file to `/etc/systemd/system/deadman.service`
 * Reload systemd services
 * enable a new service called `deadman`
@@ -36,7 +36,7 @@ Get Status: `systemctl status deadman -l`
 
 # Configuration
 
-All configuration exists within the python script `dead_mans_shutdown.py` towards the top of the script. Each variable has comments describing what it does. If you change the configuration when the utility is already running, you need to either restart the service or reboot.
+All configuration exists within the python script `deadman.py` towards the top of the script. The installed location is `/deadman.py` so you would need to edit it there after installation. Each variable has comments describing what it does. If you change the configuration when the utility is already running, you need to either restart the service or reboot.
 
 
 

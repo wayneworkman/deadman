@@ -5,8 +5,8 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/bin/python3 /dead_mans_shutdown.py
-ExecStop=/bin/pkill dead_mans_shutdown.py 
+ExecStart=/usr/bin/python3 /deadman.py
+ExecStop=/bin/pkill deadman.py 
 
 [Install]
 WantedBy=multi-user.target
