@@ -1,6 +1,6 @@
 # Dead Man's Shutdown
 
-This is a utility to secure a Linux system via shutdown. For this utility to provide security, the system being shutdown must have everything on its disk encrypted (except for the `/boot` partition) and upon booting a password is required for decryption, and no swap partitions.
+This is a utility to secure a Linux system via shutdown. For this utility to provide security, the system being shutdown must have everything on its disk encrypted (except for the `/boot` partition) and upon booting a password must be required for decryption. Any swap partitions must also be encrypted, or non-existant.
 
 Shutdown is activated in the following scenarios.
 
@@ -28,5 +28,11 @@ To start: `systemctl start deadman`
 To stop: `systemctl stop deadman`
 
 Get Status: `systemctl status deadman -l`
+
+
+# Configuration
+
+All configuration exists within the python script `dead_mans_shutdown.py` towards the top of the script. Each variable has comments describing what it does.
+
 
 

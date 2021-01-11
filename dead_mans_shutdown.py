@@ -6,7 +6,7 @@ THIS_IS_A_TEST = False
 # Hosts to ping.
 host_list = ["www.google.com", "8.8.8.8", "mega.nz", "10.0.0.1"]
 
-# Frequency to ping, in seconds
+# Frequency to ping and check for USB devices, in seconds
 frequency = 3
 
 # Number of ping failures for any of the hosts which would initiate shutdown.
@@ -15,11 +15,15 @@ failure_threshold = 3
 # Number of cycles before resetting ping failure count.
 reset_failures_after_n_cycles = 15
 
+# Time to wait for ping command to return in seconds. This needs to be a string.
+wait_for_ping_seconds = "4"
+
 
 
 from subprocess import call, DEVNULL, check_output
 from re import compile, I
 from time import sleep
+from sys import exit
 
 def get_usb_devices():
     device_re = compile(b"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", I)
@@ -35,7 +39,7 @@ def get_usb_devices():
     return devices
 
 def ping(host):
-    command = ['timeout', '2', 'ping', '-c', '1', host]
+    command = ['timeout', wait_for_ping_seconds, 'ping', '-c', '1', host]
     return call(command, stdout=DEVNULL, stderr=DEVNULL) == 0
 
 def reset_host_failures():
@@ -51,25 +55,40 @@ def failure_action():
         command = ['shutdown', 'now']
         call(command)
 
-original_usb_devices = get_usb_devices()
-host_failures = reset_host_failures()
-count = 0
-while True:
-    if count >=  reset_failures_after_n_cycles:
-        host_failures = reset_host_failures()
-        count = 0
-    count = count + 1
-    for host in host_list:
-        result = ping(host)
-        if result is False:
-            host_failures[host] = host_failures[host] + 1
-    current_usb_devices = get_usb_devices()
-    if current_usb_devices != original_usb_devices:
-        failure_action()
-    for key in host_failures.keys():
-        if host_failures[key] >= failure_threshold:
-            failure_action()
+
+
+def main():
+    print("Dead Man's Shutdown is starting.")
+
+    # This checks the ping list is all available when this script starts. Because if this script starts, it's presumed the system owner has decrypted it's drives already, and if networking isn't available at startup, we don't want to restart.
+    for i in range(0, failure_threshold):
+        for host in host_list:
+            result = ping(host)
+            if result is False:
+                print("Network seems unavailable, Dead Man's Shutdown is exiting.")
+                exit(1)
+
+    original_usb_devices = get_usb_devices()
+    host_failures = reset_host_failures()
+    count = 0
+    while True:
+        if count >=  reset_failures_after_n_cycles:
+            host_failures = reset_host_failures()
             count = 0
-    sleep(frequency)
- 
+        count = count + 1
+        for host in host_list:
+            result = ping(host)
+            if result is False:
+                host_failures[host] = host_failures[host] + 1
+        current_usb_devices = get_usb_devices()
+        if current_usb_devices != original_usb_devices:
+            failure_action()
+        for key in host_failures.keys():
+            if host_failures[key] >= failure_threshold:
+                failure_action()
+                count = 0
+        sleep(frequency)
+
+if __name__ == '__main__':
+    main()
 
