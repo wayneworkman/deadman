@@ -7,6 +7,8 @@ Shutdown is activated in the following scenarios.
 * If a list of hosts fail ping commands for a designated number of times, shutdown.
 * If the USB device list changes after this utility has started, shutdown.
 
+If the list of hosts fail to ping at all during 3 consecutive attempts when this utility first starts, the script exits. Because for this script to run at all, the rightful system owner must have already decrypted the disk, and we don't want to lock out the rightful owner if there's some network issue going on.
+
 # Installation
 
 Run `install.sh` as root. This will:
