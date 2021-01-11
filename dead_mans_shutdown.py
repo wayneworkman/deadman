@@ -18,7 +18,7 @@ reset_failures_after_n_cycles = 15
 # Time to wait for ping command to return in seconds. This needs to be a string.
 wait_for_ping_seconds = "4"
 
-# Startup Delay in seconds, determines how long before getting the original USB device list, and before pinging hosts. This gives time to the admin to unplug the keyboard/mouse and other devices after decrypting and booting.
+# Startup Delay in seconds, determines how long before getting the original USB device list, and before pinging hosts. This gives the admin time to unplug the keyboard/mouse and other devices after decrypting and booting.
 startup_delay = 120
 
 
