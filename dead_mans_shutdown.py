@@ -53,6 +53,7 @@ def failure_action():
         print("Would shutdown.")
     else:
         command = ['shutdown', 'now']
+        print("Dead Man's Shutdown is shutting down the system.")
         call(command)
 
 
