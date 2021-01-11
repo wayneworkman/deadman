@@ -18,6 +18,9 @@ reset_failures_after_n_cycles = 15
 # Time to wait for ping command to return in seconds. This needs to be a string.
 wait_for_ping_seconds = "4"
 
+# Startup Delay in seconds, determines how long before getting the original USB device list, and before pinging hosts. This gives time to the admin to unplug the keyboard/mouse and other devices after decrypting and booting.
+startup_delay = 120
+
 
 
 from subprocess import call, DEVNULL, check_output
@@ -60,6 +63,8 @@ def failure_action():
 
 def main():
     print("Dead Man's Shutdown is starting.")
+    print("Delaying for " + str(startup_delay) + " seconds before begining")
+    sleep(startup_delay)
 
     # This checks the ping list is all available when this script starts. Because if this script starts, it's presumed the system owner has decrypted it's drives already, and if networking isn't available at startup, we don't want to restart.
     for i in range(0, failure_threshold):
