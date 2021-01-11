@@ -29,12 +29,14 @@ To start: `systemctl start deadman`
 
 To stop: `systemctl stop deadman`
 
+To restart: `systemctl restart deadman`
+
 Get Status: `systemctl status deadman -l`
 
 
 # Configuration
 
-All configuration exists within the python script `dead_mans_shutdown.py` towards the top of the script. Each variable has comments describing what it does.
+All configuration exists within the python script `dead_mans_shutdown.py` towards the top of the script. Each variable has comments describing what it does. If you change the configuration when the utility is already running, you need to either restart the service or reboot.
 
 
 
