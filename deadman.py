@@ -4,13 +4,13 @@
 THIS_IS_A_TEST = False
 
 # Hosts to ping.
-host_list = ["www.google.com", "8.8.8.8", "mega.nz", "10.0.0.1"]
+host_list = ["8.8.8.8", "10.0.0.1"]
 
 # Frequency to ping and check for USB devices, in seconds
-frequency = 3
+frequency = 2
 
 # Number of ping failures for any of the hosts which would initiate shutdown.
-failure_threshold = 3
+failure_threshold = 10
 
 # Number of cycles before resetting ping failure count.
 reset_failures_after_n_cycles = 15
@@ -108,7 +108,7 @@ def main():
             failure_action()
         for key in host_failures.keys():
             if host_failures[key] >= failure_threshold:
-                log("Failed to ping " + str(key) + " for " + str(failure_threshold) + " times in a row.")
+                log("Failed to ping " + str(key) + " for " + str(failure_threshold) + " times within last " + str(reset_failures_after_n_cycles) + " checks.")
                 failure_action()
                 count = 0
         sleep(frequency)
