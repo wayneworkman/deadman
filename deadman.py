@@ -67,12 +67,11 @@ def reset_host_failures():
     return host_failures
 
 def failure_action():
-    log("Executing failure action.")
     if THIS_IS_A_TEST:
-        print("Would shutdown.")
+        log("Would shutdown.")
     else:
         command = ['shutdown', 'now']
-        print("Dead Man's Shutdown is shutting down the system.")
+        log("Dead Man's Shutdown is shutting down the system.")
         call(command)
 
 
