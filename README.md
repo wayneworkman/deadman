@@ -9,6 +9,10 @@ Shutdown is activated in the following scenarios.
 
 If the list of hosts fail to ping at all during 3 consecutive attempts when this utility first starts, the script exits. Because for this script to run at all, the rightful system owner must have already decrypted the disk, and we don't want to lock out the rightful owner if there's some network issue going on.
 
+# Startup Delay
+
+When the service is started, there is a default 120 second delay (configurable) that allows for a keyboard used to type a password to be removed before the service gets a list of USB devices.
+
 # Installation
 
 Run `install.sh` as root. This will:
@@ -19,7 +23,7 @@ Run `install.sh` as root. This will:
 * enable a new service called `deadman`
 * start the new service called `deadman`
 
-# Starting, Stopping, Enabling, Disabling, status
+# Starting, Stopping, Enabling, Disabling, Status
 
 To enable on boot: `systemctl enable deadman`
 
