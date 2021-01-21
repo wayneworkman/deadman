@@ -21,12 +21,27 @@ wait_for_ping_seconds = "4"
 # Startup Delay in seconds, determines how long before getting the original USB device list, and before pinging hosts. This gives the admin time to unplug the keyboard/mouse and other devices after decrypting and booting.
 startup_delay = 120
 
+# This is the log file to write to.
+log_file = "/var/log/deadman.log"
+
 
 
 from subprocess import call, DEVNULL, check_output
 from re import compile, I
 from time import sleep
 from sys import exit
+
+
+
+
+def log(line):
+    """
+    This log function adds a carrage return at the end of each line.
+    """
+    fh = open(log_file,'a')
+    fh.write(line + "\n")
+    fh.close()
+
 
 def get_usb_devices():
     device_re = compile(b"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", I)
@@ -52,6 +67,7 @@ def reset_host_failures():
     return host_failures
 
 def failure_action():
+    log("Executing failure action.")
     if THIS_IS_A_TEST:
         print("Would shutdown.")
     else:
@@ -62,8 +78,8 @@ def failure_action():
 
 
 def main():
-    print("Dead Man's Shutdown is starting.")
-    print("Delaying for " + str(startup_delay) + " seconds before begining")
+    log("Dead Man's Shutdown is starting.")
+    log("Delaying for " + str(startup_delay) + " seconds before begining")
     sleep(startup_delay)
 
     # This checks the ping list is all available when this script starts. Because if this script starts, it's presumed the system owner has decrypted it's drives already, and if networking isn't available at startup, we don't want to restart.
@@ -71,7 +87,7 @@ def main():
         for host in host_list:
             result = ping(host)
             if result is False:
-                print("Network seems unavailable, Dead Man's Shutdown is exiting.")
+                log("Network seems unavailable, Dead Man's Shutdown is exiting.")
                 exit(1)
 
     original_usb_devices = get_usb_devices()
@@ -88,9 +104,11 @@ def main():
                 host_failures[host] = host_failures[host] + 1
         current_usb_devices = get_usb_devices()
         if current_usb_devices != original_usb_devices:
+            log("USB devices is now different than original USB devices.")
             failure_action()
         for key in host_failures.keys():
             if host_failures[key] >= failure_threshold:
+                log("Failed to ping " + str(key) + " for " + str(failure_threshold) + " times in a row.")
                 failure_action()
                 count = 0
         sleep(frequency)
