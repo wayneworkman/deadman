@@ -25,6 +25,10 @@ startup_delay = 120
 log_file = "/var/log/deadman.log"
 
 
+# A list of lists. Each list is commands that get executed before shutdown occurs. Things like unmounting and closing encrypted volumes should be considered.
+# A simple example would be running two echo statements.
+# shutdown_commands = [["echo","hello world"],["echo","goodbye world"]]
+shutdown_commands = [["umount","/data"],["cryptsetup","close","encrypted"]]
 
 from subprocess import call, DEVNULL, check_output
 from re import compile, I
@@ -68,8 +72,12 @@ def reset_host_failures():
 
 def failure_action():
     if THIS_IS_A_TEST:
+        for shutdown_command in shutdown_commands:
+            log("Would execute: " + " ".join(shutdown_command))
         log("Would shutdown.")
     else:
+        for shutdown_command in shutdown_commands:
+            call(shutdown_command)
         command = ['shutdown', 'now']
         log("Dead Man's Shutdown is shutting down the system.")
         call(command)
