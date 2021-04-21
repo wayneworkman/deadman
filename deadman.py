@@ -9,7 +9,7 @@ host_list = ["8.8.8.8", "10.0.0.1"]
 # Frequency to ping and check for USB devices, in seconds
 frequency = 2
 
-# Number of ping failures for any of the hosts which would initiate shutdown.
+# Number of ping failures in a row for any of the hosts which would initiate shutdown.
 failure_threshold = 10
 
 # Number of cycles before resetting ping failure count.
@@ -19,15 +19,14 @@ reset_failures_after_n_cycles = 15
 wait_for_ping_seconds = "4"
 
 # Startup Delay in seconds, determines how long before getting the original USB device list, and before pinging hosts. This gives the admin time to unplug the keyboard/mouse and other devices after decrypting and booting.
-startup_delay = 120
+startup_delay = 60
 
 # This is the log file to write to.
 log_file = "/var/log/deadman.log"
 
 
-# A list of lists. Each list is commands that get executed before shutdown occurs. Things like unmounting and closing encrypted volumes should be considered.
-# A simple example would be running two echo statements.
-# shutdown_commands = [["echo","hello world"],["echo","goodbye world"]]
+# Commands to execute prior to shutting down. This is a list of lists. Each list is concatenated together to form a command. Things like unmounting and closing encrypted volumes should be considered.
+# A simple example would be running two echo statements:  shutdown_commands = [["echo","hello"],["echo","goodbye"]]
 shutdown_commands = [["umount","/data"],["cryptsetup","close","encrypted"]]
 
 from subprocess import call, DEVNULL, check_output
