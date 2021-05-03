@@ -31,16 +31,21 @@ shutdown_commands = [["umount","/data"],["cryptsetup","close","encrypted"]]
 
 from subprocess import call, DEVNULL, check_output
 from re import compile, I
-from time import sleep
+from time import sleep, strftime, localtime
 from sys import exit
+from datetime import datetime
 
 
+def return_datetime_string_now():
+    epoc_utc_now = int(datetime.utcnow().timestamp())
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(epoc_utc_now))
 
 
 def log(line):
     """
-    This log function adds a carrage return at the end of each line.
+    This log function adds a carrage return at the end of each line, and a date to the begining of each line.
     """
+    line = return_datetime_string_now() + " " + line
     fh = open(log_file,'a')
     fh.write(line + "\n")
     fh.close()
