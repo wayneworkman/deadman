@@ -38,7 +38,7 @@ from datetime import datetime
 
 def return_datetime_string_now():
     epoc_utc_now = int(datetime.utcnow().timestamp())
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(epoc_utc_now))
+    return strftime("%Y-%m-%d %H:%M:%S", localtime(epoc_utc_now))
 
 
 def log(line):
