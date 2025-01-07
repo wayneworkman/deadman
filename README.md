@@ -1,7 +1,7 @@
 ```
 # Dead Man's Shutdown
 
-This is a utility to secure a Linux system by forcing a shutdown under certain conditions. The system must be fully encrypted (except for ```/boot```) so that on boot, a decryption password is required. Swap should also be encrypted or non-existent.
+This is a utility to secure a Linux system by forcing a shutdown under certain conditions. The system must be fully encrypted (except for ```/boot```) so that on boot, a decryption password (or temporarily inserted hardware token) is required. Swap should also be encrypted or non-existent.
 
 ## Shutdown Triggers
 
@@ -22,6 +22,8 @@ Run ```install.sh``` as root. This will:
 * Reload systemd
 * Enable the ```deadman``` service
 * Start the ```deadman``` service
+* Copy mount & unmount utility scripts to root's home directory.
+** These scripts are not used by the project. They are present to ease mounting & unmounting of encrypted volumes.
 
 ## Service Control
 
@@ -44,13 +46,10 @@ This project includes the following security enhancements:
    - Certain directories are mounted read-only, home directories are protected, and the service has a restricted set of capabilities.  
    - See ```deadman.service``` for details.
 
-2. **SHA-256 Integrity Checks**:  
-   - ```deadman.py``` checks ```mount_data.sh``` and ```unmount_data.sh``` for modifications before invoking them.  
-   - If tampering is detected, the system immediately powers off.
-
-3. **Forced Unmount with 1-Second Grace**:  
+2. **Forced Unmount with 1-Second Grace**:  
    - When shutdown conditions are met, this script tries to unmount ```/data``` for up to 1 second.  
    - If unmount still hangs (e.g., due to open files), the system proceeds with immediate power-off.
+   - These commands are configurable within the global constant `shutdown_commands`
 
 4. **Stricter Shell Scripts**:
    - Scripts now use ```set -euo pipefail``` and absolute paths, reducing the risk of unexpected behaviors or PATH hijacking.
