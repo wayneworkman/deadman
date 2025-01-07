@@ -1,4 +1,3 @@
-```
 # Dead Man's Shutdown
 
 This is a utility to secure a Linux system by forcing a shutdown under certain conditions. The system must be fully encrypted (except for ```/boot```) so that on boot, a decryption password (or temporarily inserted hardware token) is required. Swap should also be encrypted or non-existent.
@@ -65,4 +64,3 @@ The Python script logs directly to stdout/stderr. Systemd/journald captures this
 ## Usage
 
 Once installed and running, normal usage does not change. However, be aware that an unexpected change in USB devices or repeated ping failures will cause an **immediate** shutdown. Ensure your network is stable and that you unplug any devices you don’t need within the startup delay window.
-```
