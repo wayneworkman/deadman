@@ -23,7 +23,7 @@ Run ```install.sh``` as root. This will:
 * Enable the ```deadman``` service
 * Start the ```deadman``` service
 * Copy mount & unmount utility scripts to root's home directory.
-** These scripts are not used by the project. They are present to ease mounting & unmounting of encrypted volumes.
+  * These scripts are not used by the main logic. They are present to ease manual mounting & unmounting of encrypted volumes.
 
 ## Service Control
 
@@ -49,7 +49,11 @@ This project includes the following security enhancements:
 2. **Forced Unmount with 1-Second Grace**:  
    - When shutdown conditions are met, this script tries to unmount ```/data``` for up to 1 second.  
    - If unmount still hangs (e.g., due to open files), the system proceeds with immediate power-off.
-   - These commands are configurable within the global constant `shutdown_commands`
+   - These commands are configurable within the global constant ```shutdown_commands```.
+
+3. **Global Power-Off Command**:  
+   - The final forced power-off uses a global constant ```POWER_OFF_COMMAND```.  
+   - You can change this if you prefer a different shutdown tool (for example, ```poweroff``` instead of ```shutdown```).
 
 4. **Stricter Shell Scripts**:
    - Scripts now use ```set -euo pipefail``` and absolute paths, reducing the risk of unexpected behaviors or PATH hijacking.
@@ -61,5 +65,4 @@ The Python script logs directly to stdout/stderr. Systemd/journald captures this
 ## Usage
 
 Once installed and running, normal usage does not change. However, be aware that an unexpected change in USB devices or repeated ping failures will cause an **immediate** shutdown. Ensure your network is stable and that you unplug any devices you don’t need within the startup delay window.
-
 ```

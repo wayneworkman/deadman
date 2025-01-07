@@ -189,6 +189,7 @@ def failure_action():
 
 def main():
     logger.info("Dead Man's Shutdown is starting.")
+    logger.info("Dead Man's Shutdown version: 0.2.0")
     logger.info(f"Delaying for {startup_delay} seconds before beginning checks...")
     sleep(startup_delay)
 
