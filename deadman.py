@@ -1,59 +1,118 @@
 #!/usr/bin/python3
 
-# When True, prints "Would shutdown." When False, actually shuts down.
-THIS_IS_A_TEST = False
-
-# Hosts to ping.
-host_list = ["8.8.8.8", "10.0.0.1"]
-
-# Frequency to ping and check for USB devices, in seconds
-frequency = 2
-
-# Number of ping failures in a row for any of the hosts which would initiate shutdown.
-failure_threshold = 10
-
-# Number of cycles before resetting ping failure count.
-reset_failures_after_n_cycles = 15
-
-# Time to wait for ping command to return in seconds. This needs to be a string.
-wait_for_ping_seconds = "4"
-
-# Startup Delay in seconds, determines how long before getting the original USB device list, and before pinging hosts. This gives the admin time to unplug the keyboard/mouse and other devices after decrypting and booting.
-startup_delay = 60
-
-# This is the log file to write to.
-log_file = "/var/log/deadman.log"
-
-
-# Commands to execute prior to shutting down. This is a list of lists. Each list is concatenated together to form a command. Things like unmounting and closing encrypted volumes should be considered.
-# A simple example would be running two echo statements:  shutdown_commands = [["echo","hello"],["echo","goodbye"]]
-shutdown_commands = [["umount","/data"],["cryptsetup","close","encrypted"]]
-
-from subprocess import call, DEVNULL, check_output
+import logging
+from subprocess import call, run, DEVNULL, PIPE, CalledProcessError, check_output
 from re import compile, I
 from time import sleep, strftime, localtime
 from sys import exit
 from datetime import datetime
 
+################################################
+# Configuration Variables
+################################################
+
+# Logging level: "INFO" by default, or "DEBUG" for detailed troubleshooting.
+LOG_LEVEL = "INFO"  # INFO or "DEBUG"
+
+# When True, prints "Would shutdown." When False, actually shuts down.
+THIS_IS_A_TEST = False
+
+# Hosts to ping. Typically you want things that are highly secure and always available. i.e. Google DNS and your home router.
+host_list = ["8.8.8.8", "192.168.1.1"]
+
+# Frequency (in seconds) to check ping and USB devices
+frequency = 2
+
+# Number of consecutive ping failures for any host before initiating shutdown
+failure_threshold = 10
+
+# Number of cycles before resetting ping failure counts
+reset_failures_after_n_cycles = 15
+
+# Time to wait for the ping command to return (string, seconds)
+wait_for_ping_seconds = "4"
+
+# Startup delay in seconds before capturing initial USB device list and starting ping checks
+startup_delay = 60
+
+# A single, user-editable list of commands for shutdown.
+#  - Each item is a list of strings: the command plus args.
+#  - If any fail or time out, we do an immediate forced poweroff.
+shutdown_commands = [
+    ["timeout", "1", "umount", "-f", "/data"],
+    ["timeout", "1", "cryptsetup", "close", "encrypted"]
+]
+
+# Global constant for powering off the system (instead of hardcoding in immediate_poweroff()).
+POWER_OFF_COMMAND = ["shutdown", "--poweroff", "now"]
+
+################################################
+# Set up Python logging
+################################################
+
+# Configure the logging level
+logging.basicConfig(
+    level=logging.DEBUG if LOG_LEVEL == "DEBUG" else logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+logger = logging.getLogger(__name__)
+
+################################################
+# Helper Functions
+################################################
+
+def run_command(cmd):
+    """
+    Runs a command. If LOG_LEVEL == "DEBUG", capture and log stdout/stderr in detail.
+    Otherwise, discard output. Returns the command's exit code.
+    """
+    if LOG_LEVEL == "DEBUG":
+        logger.debug(f"Running command (DEBUG mode): {' '.join(cmd)}")
+        try:
+            # capture_output=True is shorthand for stdout=PIPE, stderr=PIPE
+            result = run(cmd, capture_output=True, text=True, check=False)
+            logger.debug(f"Command return code: {result.returncode}")
+            if result.stdout:
+                logger.debug(f"Command stdout:\n{result.stdout.strip()}")
+            if result.stderr:
+                logger.debug(f"Command stderr:\n{result.stderr.strip()}")
+            return result.returncode
+        except CalledProcessError as e:
+            logger.debug(f"Command raised CalledProcessError: {e}")
+            return e.returncode
+        except Exception as ex:
+            logger.debug(f"Command raised unexpected exception: {ex}")
+            return 1  # Non-zero indicates failure
+    else:
+        # In non-DEBUG mode, discard output for brevity
+        logger.debug(f"Running command (INFO mode): {' '.join(cmd)}")
+        return call(cmd, stdout=DEVNULL, stderr=DEVNULL)
 
 def return_datetime_string_now():
     epoc_utc_now = int(datetime.utcnow().timestamp())
     return strftime("%Y-%m-%d %H:%M:%S", localtime(epoc_utc_now))
 
-
-def log(line):
-    """
-    This log function adds a carrage return at the end of each line, and a date to the begining of each line.
-    """
-    line = return_datetime_string_now() + " " + line
-    fh = open(log_file,'a')
-    fh.write(line + "\n")
-    fh.close()
-
-
 def get_usb_devices():
-    device_re = compile(b"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", I)
-    df = check_output("lsusb")
+    """
+    Returns a list of dicts with USB device info from lsusb output.
+    """
+    device_re = compile(b"Bus\\s+(?P<bus>\\d+)\\s+Device\\s+(?P<device>\\d+).+ID\\s(?P<id>\\w+:\\w+)\\s(?P<tag>.+)$", I)
+    
+    # If debugging, capture lsusb output in detail
+    if LOG_LEVEL == "DEBUG":
+        logger.debug("Running lsusb for USB device list.")
+        result = run(["lsusb"], capture_output=True, text=False, check=False)
+        if result.returncode != 0:
+            logger.debug(f"lsusb failed, return code = {result.returncode}")
+            logger.debug(f"stderr:\n{result.stderr.decode('utf-8', errors='ignore') if result.stderr else ''}")
+            return []
+        df = result.stdout
+        logger.debug(f"lsusb raw output:\n{df.decode('utf-8', errors='ignore')}")
+    else:
+        df = check_output(["lsusb"])
+
     devices = []
     for i in df.split(b'\n'):
         if i:
@@ -62,68 +121,123 @@ def get_usb_devices():
                 dinfo = info.groupdict()
                 dinfo['device'] = '/dev/bus/usb/%s/%s' % (dinfo.pop('bus'), dinfo.pop('device'))
                 devices.append(dinfo)
+
+    if LOG_LEVEL == "DEBUG":
+        logger.debug(f"Parsed USB devices:\n{devices}")
     return devices
 
+
 def ping(host):
-    command = ['timeout', wait_for_ping_seconds, 'ping', '-c', '1', host]
-    return call(command, stdout=DEVNULL, stderr=DEVNULL) == 0
+    """
+    Returns True if ping succeeds, False otherwise.
+    Logs debug output if LOG_LEVEL == "DEBUG".
+    """
+    command = ["timeout", wait_for_ping_seconds, "ping", "-c", "1", host]
+    rc = run_command(command)
+    return rc == 0
 
 def reset_host_failures():
-    host_failures = {}
-    for host in host_list:
-        host_failures[host] = 0
-    return host_failures
+    """
+    Initialize or reset the host_failures dictionary to zero for each host.
+    """
+    hf = {}
+    for h in host_list:
+        hf[h] = 0
+    return hf
+
+def immediate_poweroff():
+    """
+    Immediately forces system poweroff using the global POWER_OFF_COMMAND.
+    """
+    logger.info("Forcing immediate poweroff.")
+    call(POWER_OFF_COMMAND)
+
+################################################
+# Shutdown / Failure Logic
+################################################
 
 def failure_action():
+    """
+    Called when conditions for shutdown are met.
+    Iterates over shutdown_commands (which already include 'timeout', 'umount', etc.).
+    If ANY command fails or times out, calls immediate_poweroff().
+    """
+    logger.info("Shutdown triggered.")
+
     if THIS_IS_A_TEST:
-        for shutdown_command in shutdown_commands:
-            log("Would execute: " + " ".join(shutdown_command))
-        log("Would shutdown.")
-    else:
-        for shutdown_command in shutdown_commands:
-            call(shutdown_command)
-        command = ['shutdown', 'now']
-        log("Dead Man's Shutdown is shutting down the system.")
-        call(command)
+        # Only log the commands that would be executed
+        for cmd in shutdown_commands:
+            logger.info("Would execute: " + " ".join(cmd))
+        logger.info("Would shutdown.")
+        return
 
+    # Actually run the commands
+    for cmd in shutdown_commands:
+        ret = run_command(cmd)
+        if ret != 0:
+            logger.error(f"Command '{' '.join(cmd)}' failed or timed out. Forcing poweroff now.")
+            immediate_poweroff()
+            return
 
+    # If all commands succeeded, power off
+    logger.info("All shutdown commands succeeded. Forcing poweroff now.")
+    immediate_poweroff()
+
+################################################
+# Main Program
+################################################
 
 def main():
-    log("Dead Man's Shutdown is starting.")
-    log("Delaying for " + str(startup_delay) + " seconds before begining")
+    logger.info("Dead Man's Shutdown is starting.")
+    logger.info("Dead Man's Shutdown version: 0.2.0")
+    logger.info(f"Delaying for {startup_delay} seconds before beginning checks...")
     sleep(startup_delay)
 
-    # This checks the ping list is all available when this script starts. Because if this script starts, it's presumed the system owner has decrypted it's drives already, and if networking isn't available at startup, we don't want to restart.
-    for i in range(0, failure_threshold):
+    # Ensure all hosts can ping at startup
+    for _ in range(failure_threshold):
         for host in host_list:
-            result = ping(host)
-            if result is False:
-                log("Network seems unavailable, Dead Man's Shutdown is exiting.")
+            if not ping(host):
+                logger.warning("Network seems unavailable at startup. Dead Man's Shutdown will exit.")
                 exit(1)
 
+    # Capture the original USB device list
     original_usb_devices = get_usb_devices()
+
+    # Initialize host failure counters
     host_failures = reset_host_failures()
     count = 0
+
+    # Main loop
     while True:
-        if count >=  reset_failures_after_n_cycles:
+        if count >= reset_failures_after_n_cycles:
             host_failures = reset_host_failures()
             count = 0
-        count = count + 1
+
+        count += 1
+
+        # Check pings
         for host in host_list:
-            result = ping(host)
-            if result is False:
-                host_failures[host] = host_failures[host] + 1
+            success = ping(host)
+            if not success:
+                host_failures[host] += 1
+                if LOG_LEVEL == "DEBUG":
+                    logger.debug(f"Ping to {host} failed. Current failure count = {host_failures[host]}")
+
+        # Check if USB devices changed
         current_usb_devices = get_usb_devices()
         if current_usb_devices != original_usb_devices:
-            log("USB devices is now different than original USB devices.")
+            logger.info("USB device list changed from original. Initiating shutdown.")
             failure_action()
-        for key in host_failures.keys():
-            if host_failures[key] >= failure_threshold:
-                log("Failed to ping " + str(key) + " for " + str(failure_threshold) + " times within last " + str(reset_failures_after_n_cycles) + " checks.")
+            return
+
+        # Check if any host reached the failure threshold
+        for h, fcount in host_failures.items():
+            if fcount >= failure_threshold:
+                logger.info(f"Failed to ping {h} {failure_threshold} times within last {reset_failures_after_n_cycles} checks.")
                 failure_action()
-                count = 0
+                return
+
         sleep(frequency)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

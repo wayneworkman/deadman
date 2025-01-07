@@ -3,10 +3,19 @@ Description=Dead Man's Shutdown
 After=multi-user.target
 
 [Service]
+Environment=PATH=__INSTALL_SCRIPT_UPDATED__
 Type=simple
 Restart=always
 ExecStart=/usr/bin/python3 /deadman.py
-ExecStop=/bin/pkill deadman.py 
+ExecStop=/bin/pkill -f "/usr/bin/python3 /deadman.py"
+
+# --- Security Hardening ---
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+CapabilityBoundingSet=CAP_SYS_BOOT CAP_SYS_ADMIN CAP_NET_RAW
+AmbientCapabilities=CAP_NET_RAW
 
 [Install]
 WantedBy=multi-user.target
