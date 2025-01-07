@@ -24,6 +24,7 @@ chmod 700 ~/mount_data.sh
 chown root:root ~/unmount_data.sh
 chmod 700 ~/unmount_data.sh
 
+systemctl stop deadman
 systemctl daemon-reload
 systemctl enable deadman
 systemctl start deadman

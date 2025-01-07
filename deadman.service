@@ -3,6 +3,7 @@ Description=Dead Man's Shutdown
 After=multi-user.target
 
 [Service]
+Environment=PATH=/usr/bin:/bin
 Type=simple
 Restart=always
 ExecStart=/usr/bin/python3 /deadman.py
@@ -16,7 +17,8 @@ NoNewPrivileges=true
 
 # If we need to unmount or cryptsetup, we need CAP_SYS_ADMIN.
 # For powering off (shutdown/poweroff), we need CAP_SYS_BOOT.
-CapabilityBoundingSet=CAP_SYS_BOOT CAP_SYS_ADMIN
+CapabilityBoundingSet=CAP_SYS_BOOT CAP_SYS_ADMIN CAP_NET_RAW
+AmbientCapabilities=CAP_NET_RAW
 
 # Removed ReadWritePaths because we no longer write to a log file.
 
