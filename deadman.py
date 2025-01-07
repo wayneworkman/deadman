@@ -43,6 +43,9 @@ shutdown_commands = [
     ["timeout", "1", "cryptsetup", "close", "encrypted"]
 ]
 
+# Global constant for powering off the system (instead of hardcoding in immediate_poweroff()).
+POWER_OFF_COMMAND = ["shutdown", "--poweroff", "now"]
+
 ################################################
 # Set up Python logging
 ################################################
@@ -144,10 +147,10 @@ def reset_host_failures():
 
 def immediate_poweroff():
     """
-    Immediately forces system poweroff.
+    Immediately forces system poweroff using the global POWER_OFF_COMMAND.
     """
-    logger.info("Forcing immediate poweroff (poweroff -f).")
-    call(["poweroff", "-f"])
+    logger.info("Forcing immediate poweroff.")
+    call(POWER_OFF_COMMAND)
 
 ################################################
 # Shutdown / Failure Logic
