@@ -6,7 +6,19 @@ After=multi-user.target
 Type=simple
 Restart=always
 ExecStart=/usr/bin/python3 /deadman.py
-ExecStop=/bin/pkill deadman.py 
+ExecStop=/bin/pkill -f "/usr/bin/python3 /deadman.py"
+
+# --- Security Hardening ---
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+
+# If we need to unmount or cryptsetup, we need CAP_SYS_ADMIN.
+# For powering off (shutdown/poweroff), we need CAP_SYS_BOOT.
+CapabilityBoundingSet=CAP_SYS_BOOT CAP_SYS_ADMIN
+
+# Removed ReadWritePaths because we no longer write to a log file.
 
 [Install]
 WantedBy=multi-user.target
