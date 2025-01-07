@@ -24,6 +24,9 @@ chmod 700 ~/mount_data.sh
 chown root:root ~/unmount_data.sh
 chmod 700 ~/unmount_data.sh
 
+# Inject the *current* environment's PATH into deadman.service
+sed -i "s|^Environment=PATH=.*|Environment=PATH=\"$PATH\"|g" /etc/systemd/system/deadman.service
+
 systemctl stop deadman
 systemctl daemon-reload
 systemctl enable deadman

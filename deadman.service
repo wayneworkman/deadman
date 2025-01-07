@@ -3,7 +3,7 @@ Description=Dead Man's Shutdown
 After=multi-user.target
 
 [Service]
-Environment=PATH=/usr/bin:/bin
+Environment=PATH=__INSTALL_SCRIPT_UPDATED__
 Type=simple
 Restart=always
 ExecStart=/usr/bin/python3 /deadman.py
