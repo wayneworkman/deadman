@@ -23,7 +23,7 @@
    - Should provide **fast, reliable** switching. SSRs switch faster but can leak current and generate heat; mechanical relays offer full galvanic isolation but have limited switching cycles.
 
 2. **Controller Board**  
-   - **Candidate 1**: Microcontroller (e.g., Adafruit KB2350 with an RP2350 chip) running CircuitPython/MicroPython plus a secure-boot capable firmware.  
+   - **Candidate 1**: Microcontroller (e.g., Adafruit rp2350 with an RP2350 chip) running CircuitPython/MicroPython plus a secure-boot capable firmware.  
    - **Candidate 2**: Raspberry Pi Zero v1.3 (no Wi-Fi), using a minimal Linux environment, standard crypto libraries, and an SD card (less ideal for tamper, but simpler for USB connectivity).  
 
 3. **Watchdog Mechanism**  
