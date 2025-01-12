@@ -37,7 +37,7 @@ Run ```install.sh``` as root. This will:
 
 All configuration lives near the top of ```deadman.py```. After installation, edit ```/deadman.py``` accordingly, then restart the service or reboot to apply changes.
 
-## Security Hardening & Checksums
+## Security Hardening
 
 This project includes the following security enhancements:
 
