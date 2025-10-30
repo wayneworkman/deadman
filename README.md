@@ -1,5 +1,15 @@
 # Dead Man's Shutdown
 
+Created by [Wayne Workman](https://github.com/wayneworkman)
+
+[![Blog](https://img.shields.io/badge/Blog-wayne.theworkmans.us-blue)](https://wayne.theworkmans.us/)
+[![GitHub](https://img.shields.io/badge/GitHub-wayneworkman-181717?logo=github)](https://github.com/wayneworkman)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Wayne_Workman-0077B5?logo=linkedin)](https://www.linkedin.com/in/wayne-workman-a8b37b353/)
+[![SpinnyLights](https://img.shields.io/badge/SpinnyLights-wayneworkman-764ba2)](https://spinnylights.com/wayneworkman)
+
+This Terraform module deploys an AWS Lambda function that uses Amazon Bedrock to detect prompt injection attempts in user input. The module implements the security principles outlined in [this hands-on demo](https://wayne.theworkmans.us/posts/2025/10/2025-10-18-prompt-injection-hands-on-demo.html).
+
+
 This is a utility to secure a Linux system by forcing a shutdown under certain conditions. The system must be fully encrypted (except for ```/boot```) so that on boot, a decryption password (or temporarily inserted hardware token) is required. Swap should also be encrypted or non-existent.
 
 ## Shutdown Triggers
